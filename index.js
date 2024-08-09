@@ -66,6 +66,7 @@ async function run() {
     const userCollection = db.collection("users");
     const paymentCollection = db.collection("payment");
     const menuCollection = db.collection("menu");
+    const favCollection = db.collection("fav");
 
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -187,6 +188,30 @@ async function run() {
         res.status(500).send("Internal Server Error");
       }
     });
+
+    // get all Favorite data
+    app.get('/fav', async (req, res) => {
+      try {
+        const result = await favCollection.find({}, { projection: { _id: 1 } }).toArray();
+        const ids = result.map(item => item._id); 
+        res.send(ids);
+      } catch (error) {
+        res.status(500).send({ error: 'An error occurred while fetching favorite item IDs.' });
+      }
+    })
+
+    // add and remove favorite data
+    app.post('/changeFav', async (req, res) => {
+      const {item}= req.body
+      console.log(item._id)
+      const isExist = await favCollection.findOne({_id: item._id},{email:item.email})
+      if(isExist) {
+        await favCollection.deleteOne({_id: item._id},{email:item.email})
+        return res.send({message: 'Removed from favorite'})
+      }
+      await favCollection.insertOne(item)
+      return res.send({message: 'Added to favorite'})
+    })
 
     await client.connect();
     // Send a ping to confirm a successful connection
