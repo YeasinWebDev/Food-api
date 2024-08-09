@@ -171,14 +171,17 @@ async function run() {
     });
 
     // single item data
-    app.get("/food-item/:id", async (req, res) => {
+    app.get("/food-item/:id",verifyToken,async (req, res) => {
       const { id } = req.params;
       try {
         const result = await menuCollection.findOne({ _id: new ObjectId(id) });
         if (!result) {
           return res.status(404).send({ message: "Item not found" });
         }
-        res.send(result);
+        
+        const categoryData = await menuCollection.find({category: result.category}).toArray()
+
+        res.send({result,categoryData});
       } catch (error) {
         console.error("Error fetching item:", error);
         res.status(500).send("Internal Server Error");
