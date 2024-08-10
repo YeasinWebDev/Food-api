@@ -67,6 +67,7 @@ async function run() {
     const paymentCollection = db.collection("payment");
     const menuCollection = db.collection("menu");
     const favCollection = db.collection("fav");
+    const cartCollection = db.collection("cart");
 
     app.post("/jwt", async (req, res) => {
       const user = req.body;
@@ -211,6 +212,29 @@ async function run() {
       }
       await favCollection.insertOne(item)
       return res.send({message: 'Added to favorite'})
+    })
+
+    // add to cart
+    app.post('/cart', async (req, res) => {
+      const cart = req.body
+      
+      const isExist = await cartCollection.findOne({num:cart.num},{email:cart.email})
+      if(isExist) {
+        await cartCollection.updateOne({num:cart.num,email:cart.email},{$set: cart})
+        return res.send({message: 'Updated in cart'})
+      }
+      await cartCollection.insertOne(cart)
+
+      res.send({message: 'Added to'})
+    })
+
+    // all cart count
+    app.get('/allCart', async (req, res) =>{
+      const result = await cartCollection.find().toArray()
+      
+      const totalCount = result.reduce((acc, item) => acc + item.count, 0);
+      console.log(totalCount)
+      res.send({totalCount})
     })
 
     await client.connect();
