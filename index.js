@@ -228,6 +228,12 @@ async function run() {
       res.send({message: 'Added to'})
     })
 
+    // all Cart Data 
+    app.get('/allCartData', async (req, res) => {
+      const result = await cartCollection.find().toArray()
+      res.send(result)
+    })
+
     // all cart count
     app.get('/allCart', async (req, res) =>{
       const result = await cartCollection.find().toArray()
