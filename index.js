@@ -229,7 +229,7 @@ async function run() {
     })
 
     // all Cart Data 
-    app.get('/allCartData', async (req, res) => {
+    app.get('/allCartData',verifyToken, async (req, res) => {
       const result = await cartCollection.find().toArray()
       res.send(result)
     })
@@ -239,8 +239,14 @@ async function run() {
       const result = await cartCollection.find().toArray()
       
       const totalCount = result.reduce((acc, item) => acc + item.count, 0);
-      console.log(totalCount)
       res.send({totalCount})
+    })
+
+    // delete a cart
+    app.post('/deleteCart',verifyToken, async (req, res) => {
+      const {num} =  req.body
+      const result=  await cartCollection.deleteOne({num})
+      res.send({massage: 'Item deleted successfully'})
     })
 
     await client.connect();
