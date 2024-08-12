@@ -87,7 +87,6 @@ async function run() {
     // Updated user registration route
     app.put("/user", async (req, res) => {
       const user = req.body;
-      console.log(user);
       const isExist = await userCollection.findOne({ email: user.email });
       if (isExist) return;
 
@@ -204,7 +203,6 @@ async function run() {
     // add and remove favorite data
     app.post('/changeFav', async (req, res) => {
       const {item}= req.body
-      console.log(item._id)
       const isExist = await favCollection.findOne({_id: item._id},{email:item.email})
       if(isExist) {
         await favCollection.deleteOne({_id: item._id},{email:item.email})
@@ -217,8 +215,10 @@ async function run() {
     // add to cart
     app.post('/cart', async (req, res) => {
       const cart = req.body
+      console.log(cart)
       
-      const isExist = await cartCollection.findOne({num:cart.num},{email:cart.email})
+      const isExist = await cartCollection.findOne({num:cart.num,email:cart.email})
+      // console.log(isExist)
       if(isExist) {
         await cartCollection.updateOne({num:cart.num,email:cart.email},{$set: cart})
         return res.send({message: 'Updated in cart'})
@@ -229,14 +229,16 @@ async function run() {
     })
 
     // all Cart Data 
-    app.get('/allCartData',verifyToken, async (req, res) => {
-      const result = await cartCollection.find().toArray()
+    app.post('/allCartData',verifyToken, async (req, res) => {
+      const {email} = req.body
+      const result = await cartCollection.find({email}).toArray()
       res.send(result)
     })
 
     // all cart count
-    app.get('/allCart', async (req, res) =>{
-      const result = await cartCollection.find().toArray()
+    app.post('/allCart', async (req, res) =>{
+      const {email} =  req.body
+      const result = await cartCollection.find({email}).toArray()
       
       const totalCount = result.reduce((acc, item) => acc + item.count, 0);
       res.send({totalCount})
@@ -244,8 +246,10 @@ async function run() {
 
     // delete a cart
     app.post('/deleteCart',verifyToken, async (req, res) => {
-      const {num} =  req.body
-      const result=  await cartCollection.deleteOne({num})
+      const {data} =  req.body
+      const email = data.email
+      const num= data.num
+      const result = await cartCollection.deleteOne({ num, email });
       res.send({massage: 'Item deleted successfully'})
     })
 
@@ -255,7 +259,7 @@ async function run() {
       const num= data.num
       const update = data.type === 'inc' ? { $inc: { count: 1 } } : { $inc: { count: -1 } };
 
-      const result = await cartCollection.updateOne({ num: num }, update)
+      const result = await cartCollection.updateOne({ num: num,email:data.email }, update)
       res.send({massage: 'Item quantity updated successfully'})
       
     })
