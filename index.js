@@ -249,6 +249,17 @@ async function run() {
       res.send({massage: 'Item deleted successfully'})
     })
 
+    // update a cart qty
+    app.post('/updateCart', async (req, res) => {
+      const {data} =  req.body
+      const num= data.num
+      const update = data.type === 'inc' ? { $inc: { count: 1 } } : { $inc: { count: -1 } };
+
+      const result = await cartCollection.updateOne({ num: num }, update)
+      res.send({massage: 'Item quantity updated successfully'})
+      
+    })
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
