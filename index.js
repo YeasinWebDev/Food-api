@@ -271,6 +271,15 @@ async function run() {
       res.send(result);
     })
 
+    // randon a catagory
+    app.post('/subCategory', async (req, res) =>{
+      const {category} = req.body
+      const data = await menuCollection.find({ category}).toArray();
+
+      console.log(category)
+      res.send(data)
+    })
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
