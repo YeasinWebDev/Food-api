@@ -264,6 +264,13 @@ async function run() {
       
     })
 
+    // food realted catagory
+    app.get('/foods', async (req, res) => {
+      const {category} = req.query
+      const result = await menuCollection.find({ category }).toArray();
+      res.send(result);
+    })
+
     await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
