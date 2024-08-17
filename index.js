@@ -314,26 +314,27 @@ async function run() {
       }
   });
 
-  app.post('/webhook', async (req, res) =>{
-    const sig = req.headers['stripe-signature']
-
+  app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+    const sig = req.headers['stripe-signature'];
     let event;
+  
     try {
       event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (error) {
+    } catch (err) {
+      console.error('Webhook signature verification failed.', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
-
+  
     // Handle the event
-  if (event.type === 'checkout.session.completed') {
-    const session = event.data.object;
-    // Perform your actions here
-    console.log('Payment succeeded, session:', session);
-  }
-  res.status(200).send();
-
-
-  })
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      // Perform your actions here
+      console.log('Payment succeeded, session:', session);
+    }
+  
+    res.status(200).send();
+  });
+  
 
     await client.connect();
     // Send a ping to confirm a successful connection
