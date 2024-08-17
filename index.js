@@ -4,12 +4,16 @@ const express = require("express");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs");
-// const Stripe = require("stripe");
-// const stripe = Stripe(process.env.STRIPE_KEY);
+const Stripe = require("stripe");
+const stripe = Stripe(process.env.STRIPE_KEY);
 const cookieParser = require("cookie-parser");
 const PORT = process.env.PORT || 8000;
 
 const app = express();
+const bodyParser = require('body-parser');
+app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({ extended: true }));
+
 
 const corsOptions = {
   origin: ["http://localhost:5173","https://foodi-client-lemon.vercel.app"],
@@ -279,6 +283,57 @@ async function run() {
       console.log(category)
       res.send(data)
     })
+
+    app.post('/create-checkout-session', async (req, res) => {
+      const {totalAmount, quantity, userEmail} = req.body.payment
+
+      try {
+        const session = await stripe.checkout.sessions.create({
+          payment_method_types: ['card'],
+          mode: 'payment',
+          success_url: `${process.env.FRONTEND_URL}/success`,
+          cancel_url: `${process.env.FRONTEND_URL}/`,
+          line_items: [
+            {
+              price_data: {
+                currency: 'usd',
+                product_data: {
+                  name: 'Food Order',
+                },
+                unit_amount: totalAmount,
+              },
+              quantity: quantity,
+            },
+          ],
+          customer_email: userEmail,
+        })
+
+        res.status(200).send({url:session.url,})
+      } catch (error) {
+        res.status(500).send('Internal Server Error');
+      }
+  });
+
+  app.post('/webhook', async (req, res) =>{
+    const sig = req.headers['stripe-signature']
+
+    let event;
+    try {
+      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+    } catch (error) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    // Handle the event
+  if (event.type === 'checkout.session.completed') {
+    const session = event.data.object;
+    // Perform your actions here
+    console.log('Payment succeeded, session:', session);
+  }
+  res.status(200).send();
+
+
+  })
 
     await client.connect();
     // Send a ping to confirm a successful connection
