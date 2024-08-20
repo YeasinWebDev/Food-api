@@ -16,6 +16,7 @@ app.use((req, res, next) => {
     next(); 
   } else {
     bodyParser.json()(req, res, next); 
+    express.json()(req, res, next); 
   }
 });
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -28,7 +29,7 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-app.use(express.json());
+// app.use(express.json());
 
 app.use(cookieParser());
 
