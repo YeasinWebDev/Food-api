@@ -337,6 +337,30 @@ async function run() {
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
       // Perform your actions here
+      const userEmail = session.customer_email
+      const Items = session.display_items.map((item) =>(
+        {
+          name: item.description,
+          img: item.images[0],
+          price: item.amount / 100,
+          count: item.quantity,
+        }
+      ))
+      try {
+        const paymentData = {
+          email: userEmail,
+          items: Items,
+          paymentData: new Date(),
+          paymentStatus: 'succeeded',
+          sessionId: session.id,
+          totalAmount: session.amount_total / 100,
+        }
+
+        await paymentCollection.insertOne(paymentData);
+        await cartCollection.deleteMany({ email: userEmail });
+      } catch (error) {
+        console.error('Error saving payment data:', error)
+      }
       console.log('Payment succeeded, session:', session);
     }
   
