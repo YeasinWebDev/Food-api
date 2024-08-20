@@ -15,7 +15,7 @@ app.use((req, res, next) => {
   if (req.originalUrl === '/webhook') {
     next(); 
   } else {
-    bodyParser.json()(req, res, next); 
+    // bodyParser.json()(req, res, next); 
     express.json()(req, res, next); 
   }
 });
@@ -226,10 +226,9 @@ async function run() {
     // add to cart
     app.post('/cart', async (req, res) => {
       const cart = req.body
-      console.log(cart)
       
       const isExist = await cartCollection.findOne({num:cart.num,email:cart.email})
-      // console.log(isExist)
+      
       if(isExist) {
         await cartCollection.updateOne({num:cart.num,email:cart.email},{$set: cart})
         return res.send({message: 'Updated in cart'})
@@ -286,8 +285,6 @@ async function run() {
     app.post('/subCategory', async (req, res) =>{
       const {category} = req.body
       const data = await menuCollection.find({ category}).toArray();
-
-      console.log(category)
       res.send(data)
     })
 
@@ -326,7 +323,6 @@ async function run() {
   app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const body = req.body;
-    console.log(body)
   
     let event;
   
