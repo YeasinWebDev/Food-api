@@ -365,7 +365,7 @@ async function run() {
       console.log('Payment succeeded, session:', session);
     }
   
-    res.status(200).send('Event received');
+    res.status(200).send('Event received',event.type,session );
   });
   
   
