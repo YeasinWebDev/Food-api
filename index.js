@@ -333,44 +333,46 @@ async function run() {
       return res.status(400).send(`Webhook Error: ${err.message}`);
     }
   
-    // Handle the event
+    console.log('Received event:', event);
+  
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      console.log(session)
-      
-      const userEmail = session.customer_email
-      const Items = session.display_items.map((item) =>(
-        {
-          name: item.description,
-          img: item.images[0],
-          price: item.amount / 100,
-          count: item.quantity,
-        }
-      ))
+      console.log('Session object:', session);
+  
+      const userEmail = session.customer_email;
+      const items = session.display_items.map(item => ({
+        name: item.description,
+        img: item.images[0],
+        price: item.amount / 100,
+        count: item.quantity,
+      }));
+  
       try {
         const paymentData = {
           email: userEmail,
-          items: Items,
+          items: items,
           paymentData: new Date(),
           paymentStatus: 'succeeded',
           sessionId: session.id,
           totalAmount: session.amount_total / 100,
-        }
-
+        };
+  
+        console.log('Payment data to insert:', paymentData);
+  
         await paymentCollection.insertOne(paymentData);
         await cartCollection.deleteMany({ email: userEmail });
+  
+        console.log('Payment data saved successfully.');
       } catch (error) {
-        console.error('Error saving payment data:', error)
+        return res.status(500).send('Error saving payment data');
       }
-      console.log('Payment succeeded, session:', session);
     }
   
-    res.status(200).send('Event received',event.type,session );
+    res.status(200).send('Event received', session);
   });
-  
-  
 
-    // await client.connect();
+
+    await client.connect();
     // Send a ping to confirm a successful connection
     await client.db("admin").command({ ping: 1 });
   } finally {
