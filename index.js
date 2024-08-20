@@ -11,7 +11,13 @@ const PORT = process.env.PORT || 8000;
 
 const app = express();
 const bodyParser = require('body-parser');
-app.use(bodyParser.json());
+app.use((req, res, next) => {
+  if (req.originalUrl === '/webhook') {
+    next(); 
+  } else {
+    bodyParser.json()(req, res, next); 
+  }
+});
 app.use(bodyParser.urlencoded({ extended: true }));
 
 
@@ -285,41 +291,46 @@ async function run() {
     })
 
     app.post('/create-checkout-session', async (req, res) => {
-      const {totalAmount, quantity, userEmail} = req.body.payment
-
+      const { cartItems, userEmail } = req.body.payment;
+  
       try {
-        const session = await stripe.checkout.sessions.create({
-          payment_method_types: ['card'],
-          mode: 'payment',
-          success_url: `${process.env.FRONTEND_URL}/success`,
-          cancel_url: `${process.env.FRONTEND_URL}/`,
-          line_items: [
-            {
+          const lineItems = cartItems.map((item) => ({
               price_data: {
-                currency: 'usd',
-                product_data: {
-                  name: 'Food Order',
-                },
-                unit_amount: totalAmount,
+                  currency: 'usd',
+                  product_data: {
+                      name: item.name,
+                      images: [item.img], 
+                  },
+                  unit_amount: item.price * 100,  
               },
-              quantity: quantity,
-            },
-          ],
-          customer_email: userEmail,
-        })
-
-        res.status(200).send({url:session.url,})
+              quantity: item.count,
+          }));
+  
+          const session = await stripe.checkout.sessions.create({
+              payment_method_types: ['card'],
+              mode: 'payment',
+              success_url: `${process.env.FRONTEND_URL}/success`,
+              cancel_url: `${process.env.FRONTEND_URL}/`,
+              line_items: lineItems,
+              customer_email: userEmail,
+          });
+  
+          res.status(200).send({ url: session.url });
       } catch (error) {
-        res.status(500).send('Internal Server Error');
+          res.status(500).send('Internal Server Error');
       }
   });
+  
 
   app.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     const sig = req.headers['stripe-signature'];
+    const body = req.body;
+    console.log(body)
+  
     let event;
   
     try {
-      event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
+      event = stripe.webhooks.constructEvent(body, sig, process.env.STRIPE_WEBHOOK_SECRET);
     } catch (err) {
       console.error('Webhook signature verification failed.', err.message);
       return res.status(400).send(`Webhook Error: ${err.message}`);
@@ -332,8 +343,9 @@ async function run() {
       console.log('Payment succeeded, session:', session);
     }
   
-    res.status(200).send();
+    res.status(200).send('Event received');
   });
+  
   
 
     await client.connect();
