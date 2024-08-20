@@ -336,7 +336,8 @@ async function run() {
     // Handle the event
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      // Perform your actions here
+      console.log(session)
+      
       const userEmail = session.customer_email
       const Items = session.display_items.map((item) =>(
         {
