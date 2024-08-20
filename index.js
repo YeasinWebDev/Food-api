@@ -339,10 +339,36 @@ async function run() {
       const session = event.data.object;
       console.log('Session object:', session);
   
-      
+      const userEmail = session.customer_email;
+      const items = session.display_items.map(item => ({
+        name: item.description,
+        img: item.images[0],
+        price: item.amount / 100,
+        count: item.quantity,
+      }));
+  
+      try {
+        const paymentData = {
+          email: userEmail,
+          items: items,
+          paymentData: new Date(),
+          paymentStatus: 'succeeded',
+          sessionId: session.id,
+          totalAmount: session.amount_total / 100,
+        };
+  
+        console.log('Payment data to insert:', paymentData);
+  
+        await paymentCollection.insertOne(paymentData);
+        await cartCollection.deleteMany({ email: userEmail });
+  
+        console.log('Payment data saved successfully.');
+      } catch (error) {
+        return res.status(500).send('Error saving payment data');
+      }
     }
   
-    res.status(200).send('Event received', session);
+    res.status(200).send('Event received',event.type );
   });
 
 
