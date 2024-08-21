@@ -339,7 +339,7 @@ async function run() {
       console.log(session)
       
       const userEmail = session.customer_email
-      const Items = session.display_items.map((item) =>(
+      const Items = session.display_items?.map((item) =>(
         {
           name: item.description,
           img: item.images[0],
@@ -369,9 +369,9 @@ async function run() {
   
   
 
-    await client.connect();
+    // await client.connect();
     // Send a ping to confirm a successful connection
-    await client.db("admin").command({ ping: 1 });
+    // await client.db("admin").command({ ping: 1 });
   } finally {
     // Ensures that the client will close when you finish/error
     // await client.close();
