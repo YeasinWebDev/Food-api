@@ -336,14 +336,13 @@ async function run() {
     // Handle the event
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
-      console.log(session)
       
       const userEmail = session.customer_email
-      const Items = session.display_items?.map((item) =>(
+      const Items = session.lineItems.map((item) =>(
         {
           name: item.description,
-          img: item.images[0],
-          price: item.amount / 100,
+          img: item.price.product.images[0],
+          price: item.amount_subtotal / 100,
           count: item.quantity,
         }
       ))
