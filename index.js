@@ -342,16 +342,20 @@ async function run() {
         console.error('No line items found for session:', session.id);
         return res.status(500).send('No line items found');
       }
-      return res.status(200).json({lineItems})
+      // return res.status(200).json({lineItems})
       const userEmail = session.customer_email
-      const Items = lineItems.data.map((item) =>(
-        {
-          name: item.description,
-          img: item.price.product.images[0],
-          price: item.amount_subtotal / 100,
-          count: item.quantity,
-        }
-      ))
+      const items = await Promise.all(lineItems.data.map(async (item) => {
+        // Fetch product details to get the image
+        const product = await stripe.products.retrieve(item.price.product);
+
+        return {
+            name: item.description,
+            img: product.images[0] || '', 
+            price: item.amount_subtotal / 100,
+            count: item.quantity,
+        };
+    }));
+    
       try {
         const paymentData = {
           email: userEmail,
