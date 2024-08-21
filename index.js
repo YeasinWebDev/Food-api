@@ -342,7 +342,7 @@ async function run() {
         console.error('No line items found for session:', session.id);
         return res.status(500).send('No line items found');
       }
-      
+      return res.status(200).json({lineItems})
       const userEmail = session.customer_email
       const Items = lineItems.data.map((item) =>(
         {
