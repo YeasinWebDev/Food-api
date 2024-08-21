@@ -359,7 +359,7 @@ async function run() {
       try {
         const paymentData = {
           email: userEmail,
-          items: Items,
+          items: items,
           paymentData: new Date(),
           paymentStatus: 'succeeded',
           sessionId: session.id,
