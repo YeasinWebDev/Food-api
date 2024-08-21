@@ -336,9 +336,15 @@ async function run() {
     // Handle the event
     if (event.type === 'checkout.session.completed') {
       const session = event.data.object;
+      const lineItems = await stripe.checkout.sessions.listLineItems(session.id);
+
+      if (!lineItems || !lineItems.data) {
+        console.error('No line items found for session:', session.id);
+        return res.status(500).send('No line items found');
+      }
       
       const userEmail = session.customer_email
-      const Items = session.lineItems.map((item) =>(
+      const Items = lineItems?.map((item) =>(
         {
           name: item.description,
           img: item.price.product.images[0],
