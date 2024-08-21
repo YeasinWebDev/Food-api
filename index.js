@@ -344,7 +344,7 @@ async function run() {
       }
       
       const userEmail = session.customer_email
-      const Items = lineItems?.map((item) =>(
+      const Items = lineItems.data.map((item) =>(
         {
           name: item.description,
           img: item.price.product.images[0],
