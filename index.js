@@ -364,7 +364,7 @@ async function run() {
       }
     }
   
-    res.status(200).send('Event received',event );
+    res.status(200).json({ message: 'Event received', event });
   });
   
   
