@@ -183,7 +183,7 @@ async function run() {
     });
 
     // post food on database
-    app.post('/food-items', async (req, res) => {
+    app.post('/food-items',verifyToken, async (req, res) => {
       const foodItem = req.body;
       try {
         const result = await menuCollection.insertOne(foodItem);
@@ -298,6 +298,14 @@ async function run() {
       const {category} = req.body
       const data = await menuCollection.find({ category}).toArray();
       res.send(data)
+    })
+
+    // get food by email
+    app.get('/myfood', async (req, res) =>{
+      const {email} = req.query
+      const result = await menuCollection.find({ 
+        addedByEmail:email }).toArray();
+      res.send(result);
     })
 
     // payment by stripe
