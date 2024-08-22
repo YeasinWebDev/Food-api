@@ -182,6 +182,18 @@ async function run() {
       }
     });
 
+    // post food on database
+    app.post('/food-items', async (req, res) => {
+      const foodItem = req.body;
+      try {
+        const result = await menuCollection.insertOne(foodItem);
+        res.send(result);
+      } catch (error) {
+        console.error("Error inserting item:", error);
+        res.status(500).send("Internal Server Error");
+      }
+    })
+
     // single item data
     app.get("/food-item/:id",verifyToken,async (req, res) => {
       const { id } = req.params;
@@ -288,6 +300,7 @@ async function run() {
       res.send(data)
     })
 
+    // payment by stripe
     app.post('/create-checkout-session', async (req, res) => {
       const { cartItems, userEmail } = req.body.payment;
   
