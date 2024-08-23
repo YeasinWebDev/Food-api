@@ -317,6 +317,14 @@ async function run() {
 
     })
 
+    // delete food
+    app.delete('/deletefood/:id',verifyToken, async (req, res)=>{
+      const {id} = req.params
+      
+      await menuCollection.deleteOne({_id: new ObjectId(id)})
+      res.send({message: 'Food deleted successfully'})
+    })
+
     // payment by stripe
     app.post('/create-checkout-session', async (req, res) => {
       const { cartItems, userEmail } = req.body.payment;
