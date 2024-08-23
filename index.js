@@ -325,6 +325,13 @@ async function run() {
       res.send({message: 'Food deleted successfully'})
     })
 
+    // get Transition
+    app.get('/myTransition', verifyToken, async (req, res)=>{
+      const {email} = req.query
+      const result = await paymentCollection.find({ email }).toArray();
+      res.send(result);
+    })
+
     // payment by stripe
     app.post('/create-checkout-session', async (req, res) => {
       const { cartItems, userEmail } = req.body.payment;
@@ -399,7 +406,7 @@ async function run() {
           email: userEmail,
           items: items,
           paymentData: new Date(),
-          paymentStatus: 'succeeded',
+          paymentStatus: 'Succeeded',
           sessionId: session.id,
           totalAmount: session.amount_total / 100,
         }
