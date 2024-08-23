@@ -301,11 +301,20 @@ async function run() {
     })
 
     // get food by email
-    app.get('/myfood', async (req, res) =>{
+    app.get('/myfood',verifyToken, async (req, res) =>{
       const {email} = req.query
       const result = await menuCollection.find({ 
         addedByEmail:email }).toArray();
       res.send(result);
+    })
+
+    // update food
+    app.put('/updateitem/:id',verifyToken, async (req, res) =>{
+      const {id} = req.params
+      const updatedItem = req.body
+      await menuCollection.updateOne({_id: new ObjectId(id)},{$set: updatedItem})
+      res.send({message: 'Food updated successfully'})
+
     })
 
     // payment by stripe
