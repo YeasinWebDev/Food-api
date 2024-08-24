@@ -183,16 +183,26 @@ async function run() {
     });
 
     // post food on database
-    app.post('/food-items',verifyToken, async (req, res) => {
+    app.post('/food-items', verifyToken, async (req, res) => {
       const foodItem = req.body;
+      
       try {
-        const result = await menuCollection.insertOne(foodItem);
-        res.send(result);
+          // Fetch the last inserted item to get the highest 'num' value
+          const lastItem = await menuCollection.find().sort({ num: -1 }).limit(1).toArray();
+
+          const newNum = lastItem.length > 0 ? lastItem[0].num + 1 : 1;
+
+          foodItem.num = newNum;
+          
+          const result = await menuCollection.insertOne(foodItem);
+          
+          res.send(result);
       } catch (error) {
-        console.error("Error inserting item:", error);
-        res.status(500).send("Internal Server Error");
+          console.error("Error inserting item:", error);
+          res.status(500).send("Internal Server Error");
       }
-    })
+  });
+  
 
     // single item data
     app.get("/food-item/:id",verifyToken,async (req, res) => {
