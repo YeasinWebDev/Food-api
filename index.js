@@ -332,6 +332,16 @@ async function run() {
       res.send(result);
     })
 
+    // get fav list
+    app.get('/myFav', verifyToken, async (req, res)=>{
+      const {email} = req.query
+      const favResult = await favCollection.find({ email }).toArray();
+      const favIds = favResult.map(item => new ObjectId(item._id));
+      
+      const result = await menuCollection.find({ _id: { $in: favIds } }).toArray();
+      res.send(result);
+    })
+
     // payment by stripe
     app.post('/create-checkout-session', async (req, res) => {
       const { cartItems, userEmail } = req.body.payment;
