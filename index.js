@@ -214,10 +214,11 @@ async function run() {
 
     // get all Favorite data
     app.get('/fav', async (req, res) => {
+      const {email} = req.query;
       try {
-        const result = await favCollection.find({}, { projection: { _id: 1 } }).toArray();
-        const ids = result.map(item => item._id); 
-        res.send(ids);
+        const result = await favCollection.find({email}, { projection: { num: 1 ,_id:0} }).toArray();
+        console.log(result)
+        res.send(result);
       } catch (error) {
         res.status(500).send({ error: 'An error occurred while fetching favorite item IDs.' });
       }
@@ -226,13 +227,19 @@ async function run() {
     // add and remove favorite data
     app.post('/changeFav', async (req, res) => {
       const {item}= req.body
-      const isExist = await favCollection.findOne({_id: item._id},{email:item.email})
-      if(isExist) {
-        await favCollection.deleteOne({_id: item._id},{email:item.email})
+      const isExist = await favCollection.find({email:item.email,}).toArray()
+
+      const databyid = isExist.some(i => i.num === item.num)
+
+      if(databyid) {
+        await favCollection.deleteOne({num: item.num,email:item.email})
         return res.send({message: 'Removed from favorite'})
+      }else{
+        delete item._id
+        const result = await favCollection.insertOne(item)
+        console.log(result)
+        return res.send({message: 'Added to favorite'})
       }
-      await favCollection.insertOne(item)
-      return res.send({message: 'Added to favorite'})
     })
 
     // add to cart
@@ -336,9 +343,8 @@ async function run() {
     app.get('/myFav', verifyToken, async (req, res)=>{
       const {email} = req.query
       const favResult = await favCollection.find({ email }).toArray();
-      const favIds = favResult.map(item => new ObjectId(item._id));
-      
-      const result = await menuCollection.find({ _id: { $in: favIds } }).toArray();
+      const favnums = favResult.map(item => item.num);
+      const result = await menuCollection.find({num: { $in: favnums } }).toArray();
       res.send(result);
     })
 
