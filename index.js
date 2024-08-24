@@ -193,7 +193,7 @@ async function run() {
           const newNum = lastItem.length > 0 ? lastItem[0].num + 1 : 1;
 
           foodItem.num = newNum;
-          
+
           const result = await menuCollection.insertOne(foodItem);
           
           res.send(result);
@@ -357,6 +357,31 @@ async function run() {
       const result = await menuCollection.find({num: { $in: favnums } }).toArray();
       res.send(result);
     })
+
+    // statistics 
+    app.get("/DashbordStats", verifyToken, async (req, res) => {
+      try {
+        const totalFoods = await menuCollection.countDocuments();
+        const totalUsers = await userCollection.countDocuments();
+        const totalCart = await cartCollection.countDocuments();
+        const payments = await paymentCollection.find({}).toArray();
+        const totalPayemnt = await paymentCollection.countDocuments()
+        const totalRevenue = payments.reduce(
+          (sum, payment) => sum + payment.totalAmount,
+          0
+        );
+        res.send({
+          totalFoods,
+          totalUsers,
+          totalCart,
+          totalPayemnt,
+          totalRevenue
+
+        });
+      } catch (error) {
+        res.status(500).send({ error: "Failed to fetch stats" });
+      }
+    });
 
     // payment by stripe
     app.post('/create-checkout-session', async (req, res) => {
