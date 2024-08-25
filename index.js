@@ -172,7 +172,7 @@ async function run() {
 
     // getting items base on cetegory
     app.get("/food-items", async (req, res) => {
-      const { category } = req.query;
+      const { category, page = 1, limit = 6 } = req.query;
       let query = {};
 
       if (category && category !== "All") {
@@ -180,13 +180,34 @@ async function run() {
       }
 
       try {
-        const result = await menuCollection.find(query).toArray();
-        res.send(result);
+        const skip = (page - 1 ) * limit;
+        const result = await menuCollection.find(query).skip(skip).limit(parseInt(limit)).toArray();
+
+        const totalItems = await menuCollection.countDocuments(query)
+        const totalPages = Math.ceil(totalItems / limit)
+
+        res.send({items: result, totalPages});
       } catch (error) {
         console.error("Error fetching items:", error);
         res.status(500).send("Internal Server Error");
       }
     });
+
+    // get food items base on search
+    app.post('/search-items', async (req, res) => {
+      const { value } = req.body;
+      const limit = 6
+      const regex = new RegExp(value, 'i');
+      try {
+        const result = await menuCollection.find({ name: regex }).toArray();
+        const totalItems = await menuCollection.countDocuments({ name: regex })
+        const totalPages = Math.ceil(totalItems / limit)
+        res.send({items:result, totalPages:totalPages});
+      } catch (error) {
+        console.error("Error fetching items:", error);
+        res.status(500).send("Internal Server Error");
+      }
+    })
 
     // post food on database
     app.post('/food-items', verifyToken, async (req, res) => {
@@ -233,7 +254,6 @@ async function run() {
       const {email} = req.query;
       try {
         const result = await favCollection.find({email}, { projection: { num: 1 ,_id:0} }).toArray();
-        console.log(result)
         res.send(result);
       } catch (error) {
         res.status(500).send({ error: 'An error occurred while fetching favorite item IDs.' });
@@ -253,7 +273,6 @@ async function run() {
       }else{
         delete item._id
         const result = await favCollection.insertOne(item)
-        console.log(result)
         return res.send({message: 'Added to favorite'})
       }
     })
