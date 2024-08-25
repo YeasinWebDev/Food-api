@@ -135,6 +135,12 @@ async function run() {
       res.send(result);
     });
 
+    // all users 
+    app.get('/allUsers',verifyToken, async (req, res) => {
+      const result = await userCollection.find().toArray();
+      res.send(result);
+    })
+
     // Update the POST route for user login
     app.post("/login", async (req, res) => {
       const { email, pin } = req.body;
